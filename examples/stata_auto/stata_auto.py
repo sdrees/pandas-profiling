@@ -1,15 +1,15 @@
-import pandas as pd
-import pandas_profiling
+from pathlib import Path
 
+import pandas as pd
+
+from pandas_profiling import ProfileReport
+from pandas_profiling.utils.cache import cache_file
 
 if __name__ == "__main__":
+    file_name = cache_file("auto2.dta", "http://www.stata-press.com/data/r15/auto2.dta")
     # Suggested by @adamrossnelson
-    df = pd.read_stata("http://www.stata-press.com/data/r15/auto2.dta")
+    df = pd.read_stata(file_name)
 
     # Length left out due to correlation with weight.
-    report = pandas_profiling.ProfileReport(df, title="1978 Automobile dataset")
-    report.to_file("stata_auto_report.html")
-
-    # Pass rejected variables to new profile report.
-    # rejected = pandas_profiling.ProfileReport(df).get_rejected_variables(threshold=0.9)
-    # pandas_profiling.ProfileReport(df[rejected])
+    report = ProfileReport(df, title="1978 Automobile dataset")
+    report.to_file(Path("stata_auto_report.html"))

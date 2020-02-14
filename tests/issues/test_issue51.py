@@ -11,15 +11,14 @@ import requests
 import numpy as np
 
 
-def test_issue51(tmpdir):
+def test_issue51(get_data_file):
     # Categorical has empty ('') value
-    response = requests.get(
-        "https://raw.githubusercontent.com/adamrossnelson/HelloWorld/master/sparefiles/buggy1.pkl"
+    file_name = get_data_file(
+        "buggy1.pkl",
+        "https://raw.githubusercontent.com/adamrossnelson/HelloWorld/master/sparefiles/buggy1.pkl",
     )
-    pkl_file = Path(str(tmpdir)) / "buggy1.pkl"
-    pkl_file.write_bytes(response.content)
 
-    df = pd.read_pickle(str(pkl_file))
+    df = pd.read_pickle(str(file_name))
 
     report = df.profile_report(title="Pandas Profiling Report")
     assert (
@@ -43,19 +42,19 @@ def test_issue51_similar():
     ), "Profile report should be generated."
 
 
-def test_issue51_mixed():
-    df = pd.DataFrame(
-        {
-            "test": ["", "hoi", None],
-            "blest": [None, "", "geert"],
-            "bert": ["snor", "", np.nan],
-        }
-    )
-    report = df.profile_report(title="Pandas Profiling Report")
-
-    assert (
-        'data-toggle="tab">Recoded</a>' in report.to_html()
-    ), "Recoded should be present"
+# def test_issue51_mixed():
+#     df = pd.DataFrame(
+#         {
+#             "test": ["", "hoi", None, "friet"],
+#             "blest": [None, "", "geert", "pizza"],
+#             "bert": ["snor", "", np.nan, ""],
+#             "fruit": ["", "ok", np.nan, ""],
+#         }
+#     )
+#     report = df.profile_report(title="Pandas Profiling Report")
+#     assert (
+#         "data-toggle=tab>Recoded</a>" in report.to_html()
+#     ), "Recoded should be present"
 
 
 def test_issue51_empty():

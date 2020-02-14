@@ -4,10 +4,24 @@ docs:
 	rmdir docs/pandas_profiling
 
 test:
-	pytest --nbval --cov=./ --sanitize-with tests/sanitize-notebook.cfg tests/
+	pytest --black tests/unit/
+	pytest --black tests/issues/
+	pytest --nbval tests/notebooks/
+	flake8 . --select=E9,F63,F7,F82 --show-source --statistics
 
 install:
 	pip install -e .
 
 lint:
 	black .
+
+typing:
+	pytest --mypy -m mypy .
+
+all:
+	make lint
+	make install
+	make examples
+	make docs
+	make test
+	make typing

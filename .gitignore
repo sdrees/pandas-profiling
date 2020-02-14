@@ -70,3 +70,7 @@ ipynb_tmp/
 examples/*/*.csv
 *.parquet
 playground/
+
+# mypy
+.mypy_cache/
+/data/

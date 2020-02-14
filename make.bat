@@ -9,7 +9,10 @@ IF "%1%" == "docs" (
 )
 
 IF "%1" == "test" (
-    pytest --nbval --cov=./ --sanitize-with tests/sanitize-notebook.cfg tests/
+    pytest --black tests/unit/
+    pytest --black tests/issues/
+    pytest --nbval tests/notebooks/
+    flake8 . --select=E9,F63,F7,F82 --show-source --statistics
     ECHO "Tests completed!"
     GOTO end
 )
@@ -47,12 +50,18 @@ IF "%1" == "install" (
 	GOTO end
 )
 
+if "%1" == "typing" (
+	pytest --mypy -m mypy .
+	GOTO end
+)
+
 IF "%1%" == "all" (
     make lint
     make install
     make examples
     make docs
     make test
+    make typing
     GOTO end
 )
 
