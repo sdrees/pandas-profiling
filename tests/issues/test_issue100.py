@@ -2,8 +2,8 @@
 Test for issue 100:
 https://github.com/pandas-profiling/pandas-profiling/issues/100
 """
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 from pandas_profiling import ProfileReport
 
@@ -18,5 +18,4 @@ def test_issue100():
         title="Dataset with <em>Numeric</em> Categories",
         samples={"head": 20},
     )
-    html = report.to_html()
-    assert type(html) == str and "Dataset with <em>Numeric</em> Categories" in html
+    assert report.description_set is not None

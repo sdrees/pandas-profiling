@@ -1,12 +1,16 @@
 """Common util functions (e.g. missing in Python)."""
 import collections
 import zipfile
+from datetime import datetime, timedelta
+
+# Monkeypatch bug in imagehdr
+from imghdr import tests
 from pathlib import Path
 from typing import Mapping
 
 
 def update(d: dict, u: Mapping) -> dict:
-    """ Recursively update a dict.
+    """Recursively update a dict.
 
     Args:
         d: Dictionary to update.
@@ -36,7 +40,7 @@ def _copy(self, target):
     import shutil
 
     assert self.is_file()
-    shutil.copy(str(self), str(target))  # str() only there for Python < (3, 6)
+    shutil.copy(str(self), target)
 
 
 Path.copy = _copy  # type: ignore
@@ -48,10 +52,6 @@ def extract_zip(outfile, effective_path):
             z.extractall(effective_path)
     except zipfile.BadZipFile as e:
         raise ValueError("Bad zip file", e)
-
-
-# Monkeypatch bug in imagehdr
-from imghdr import tests
 
 
 def test_jpeg1(h, f):
@@ -81,3 +81,10 @@ def test_jpeg3(h, f):
 tests.append(test_jpeg1)
 tests.append(test_jpeg2)
 tests.append(test_jpeg3)
+
+
+def convert_timestamp_to_datetime(timestamp: int) -> datetime:
+    if timestamp >= 0:
+        return datetime.fromtimestamp(timestamp)
+    else:
+        return datetime(1970, 1, 1) + timedelta(seconds=int(timestamp))

@@ -1,15 +1,16 @@
 from pandas_profiling.config import config
-from pandas_profiling.visualisation.plot import scatter_complex
 from pandas_profiling.report.presentation.core import (
     HTML,
+    Container,
     Image,
-    Sequence,
     Table,
     VariableInfo,
 )
+from pandas_profiling.visualisation.plot import scatter_complex
 
 
 def render_complex(summary):
+    varid = summary["varid"]
     template_variables = {}
     image_format = config["plot"]["image_format"].get(str)
 
@@ -19,12 +20,17 @@ def render_complex(summary):
         summary["varname"],
         "Complex number (&Copf;)",
         summary["warnings"],
+        summary["description"],
     )
 
     table1 = Table(
         [
-            {"name": "Distinct count", "value": summary["n_unique"], "fmt": "fmt"},
-            {"name": "Unique (%)", "value": summary["p_unique"], "fmt": "fmt_percent"},
+            {"name": "Distinct", "value": summary["n_distinct"], "fmt": "fmt"},
+            {
+                "name": "Distinct (%)",
+                "value": summary["p_distinct"],
+                "fmt": "fmt_percent",
+            },
             {"name": "Missing", "value": summary["n_missing"], "fmt": "fmt"},
             {
                 "name": "Missing (%)",
@@ -41,17 +47,17 @@ def render_complex(summary):
 
     table2 = Table(
         [
-            {"name": "Mean", "value": summary["mean"], "fmt": "fmt"},
-            {"name": "Minimum", "value": summary["min"], "fmt": "fmt"},
-            {"name": "Maximum", "value": summary["max"], "fmt": "fmt"},
-            {"name": "Zeros", "value": summary["n_zeros"], "fmt": "fmt"},
+            {"name": "Mean", "value": summary["mean"], "fmt": "fmt_numeric"},
+            {"name": "Minimum", "value": summary["min"], "fmt": "fmt_numeric"},
+            {"name": "Maximum", "value": summary["max"], "fmt": "fmt_numeric"},
+            {"name": "Zeros", "value": summary["n_zeros"], "fmt": "fmt_numeric"},
             {"name": "Zeros (%)", "value": summary["p_zeros"], "fmt": "fmt_percent"},
         ]
     )
 
     placeholder = HTML("")
 
-    template_variables["top"] = Sequence(
+    template_variables["top"] = Container(
         [info, table1, table2, placeholder], sequence_type="grid"
     )
 
@@ -63,11 +69,11 @@ def render_complex(summary):
             alt="Scatterplot",
             caption="Scatterplot in the complex plane",
             name="Scatter",
-            anchor_id="{varid}scatter".format(varid=summary["varid"]),
+            anchor_id=f"{varid}scatter",
         )
     ]
 
-    bottom = Sequence(items, sequence_type="tabs", anchor_id=summary["varid"])
+    bottom = Container(items, sequence_type="tabs", anchor_id=summary["varid"])
 
     template_variables["bottom"] = bottom
 

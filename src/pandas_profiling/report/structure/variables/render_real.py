@@ -1,17 +1,17 @@
 from pandas_profiling.config import config
-from pandas_profiling.report.formatters import fmt_array
-from pandas_profiling.visualisation.plot import mini_histogram, histogram
 from pandas_profiling.report.presentation.core import (
-    Table,
-    Sequence,
-    Image,
+    Container,
     FrequencyTable,
+    Image,
+    Table,
     VariableInfo,
 )
 from pandas_profiling.report.structure.variables.render_common import render_common
+from pandas_profiling.visualisation.plot import histogram, mini_histogram
 
 
 def render_real(summary):
+    varid = summary["varid"]
     template_variables = render_common(summary)
     image_format = config["plot"]["image_format"].get(str)
 
@@ -21,21 +21,27 @@ def render_real(summary):
         name = "Real number (&Ropf;)"
 
     # Top
-    info = VariableInfo(summary["varid"], summary["varname"], name, summary["warnings"])
+    info = VariableInfo(
+        summary["varid"],
+        summary["varname"],
+        name,
+        summary["warnings"],
+        summary["description"],
+    )
 
     table1 = Table(
         [
             {
-                "name": "Distinct count",
-                "value": summary["n_unique"],
+                "name": "Distinct",
+                "value": summary["n_distinct"],
                 "fmt": "fmt",
-                "alert": "n_unique" in summary["warn_fields"],
+                "alert": "n_distinct" in summary["warn_fields"],
             },
             {
-                "name": "Unique (%)",
-                "value": summary["p_unique"],
+                "name": "Distinct (%)",
+                "value": summary["p_distinct"],
                 "fmt": "fmt_percent",
-                "alert": "p_unique" in summary["warn_fields"],
+                "alert": "p_distinct" in summary["warn_fields"],
             },
             {
                 "name": "Missing",
@@ -66,9 +72,24 @@ def render_real(summary):
 
     table2 = Table(
         [
-            {"name": "Mean", "value": summary["mean"], "fmt": "fmt", "alert": False},
-            {"name": "Minimum", "value": summary["min"], "fmt": "fmt", "alert": False},
-            {"name": "Maximum", "value": summary["max"], "fmt": "fmt", "alert": False},
+            {
+                "name": "Mean",
+                "value": summary["mean"],
+                "fmt": "fmt_numeric",
+                "alert": False,
+            },
+            {
+                "name": "Minimum",
+                "value": summary["min"],
+                "fmt": "fmt_numeric",
+                "alert": False,
+            },
+            {
+                "name": "Maximum",
+                "value": summary["max"],
+                "fmt": "fmt_numeric",
+                "alert": False,
+            },
             {
                 "name": "Zeros",
                 "value": summary["n_zeros"],
@@ -90,16 +111,13 @@ def render_real(summary):
         ]
     )
 
-    histogram_bins = 10
-
-    # TODO: replace with SmallImage...
     mini_histo = Image(
-        mini_histogram(summary["histogram_data"], summary, histogram_bins),
+        mini_histogram(*summary["histogram"]),
         image_format=image_format,
         alt="Mini histogram",
     )
 
-    template_variables["top"] = Sequence(
+    template_variables["top"] = Container(
         [info, table1, table2, mini_histo], sequence_type="grid"
     )
 
@@ -121,6 +139,17 @@ def render_real(summary):
         ],
         name="Quantile statistics",
     )
+
+    if summary["monotonic_increase_strict"]:
+        monotocity = "Strictly increasing"
+    elif summary["monotonic_decrease_strict"]:
+        monotocity = "Strictly decreasing"
+    elif summary["monotonic_increase"]:
+        monotocity = "Increasing"
+    elif summary["monotonic_decrease"]:
+        monotocity = "Decreasing"
+    else:
+        monotocity = "Not monotonic"
 
     descriptive_statistics = Table(
         [
@@ -149,86 +178,58 @@ def render_real(summary):
             },
             {"name": "Sum", "value": summary["sum"], "fmt": "fmt_numeric"},
             {"name": "Variance", "value": summary["variance"], "fmt": "fmt_numeric"},
+            {"name": "Monotocity", "value": monotocity, "fmt": "fmt"},
         ],
         name="Descriptive statistics",
     )
 
-    statistics = Sequence(
+    statistics = Container(
         [quantile_statistics, descriptive_statistics],
-        anchor_id="{varid}statistics".format(varid=summary["varid"]),
+        anchor_id=f"{varid}statistics",
         name="Statistics",
         sequence_type="grid",
     )
 
-    seqs = [
-        Image(
-            histogram(summary["histogram_data"], summary, histogram_bins),
-            image_format=image_format,
-            alt="Histogram",
-            caption="<strong>Histogram with fixed size bins</strong> (bins={})".format(
-                histogram_bins
-            ),
-            name="Histogram",
-            anchor_id="{varid}histogram".format(varid=summary["varid"]),
-        )
-    ]
+    hist = Image(
+        histogram(*summary["histogram"]),
+        image_format=image_format,
+        alt="Histogram",
+        caption=f"<strong>Histogram with fixed size bins</strong> (bins={len(summary['histogram'][1]) - 1})",
+        name="Histogram",
+        anchor_id=f"{varid}histogram",
+    )
 
     fq = FrequencyTable(
         template_variables["freq_table_rows"],
         name="Common values",
-        anchor_id="{varid}common_values".format(varid=summary["varid"]),
+        anchor_id=f"{varid}common_values",
+        redact=False,
     )
 
-    evs = Sequence(
+    evs = Container(
         [
             FrequencyTable(
                 template_variables["firstn_expanded"],
                 name="Minimum 5 values",
-                anchor_id="{varid}firstn".format(varid=summary["varid"]),
+                anchor_id=f"{varid}firstn",
+                redact=False,
             ),
             FrequencyTable(
                 template_variables["lastn_expanded"],
                 name="Maximum 5 values",
-                anchor_id="{varid}lastn".format(varid=summary["varid"]),
+                anchor_id=f"{varid}lastn",
+                redact=False,
             ),
         ],
         sequence_type="tabs",
         name="Extreme values",
-        anchor_id="{varid}extreme_values".format(varid=summary["varid"]),
+        anchor_id=f"{varid}extreme_values",
     )
 
-    if "histogram_bins_bayesian_blocks" in summary:
-        histo_dyn = Image(
-            histogram(
-                summary["histogram_data"],
-                summary,
-                summary["histogram_bins_bayesian_blocks"],
-            ),
-            image_format=image_format,
-            alt="Histogram",
-            caption='<strong>Histogram with variable size bins</strong> (bins={}, <a href="https://ui.adsabs.harvard.edu/abs/2013ApJ...764..167S/abstract" target="_blank">"bayesian blocks"</a> binning strategy used)'.format(
-                fmt_array(summary["histogram_bins_bayesian_blocks"], threshold=5)
-            ),
-            name="Dynamic Histogram",
-            anchor_id="{varid}dynamic_histogram".format(varid=summary["varid"]),
-        )
-
-        seqs.append(histo_dyn)
-
-    template_variables["bottom"] = Sequence(
-        [
-            statistics,
-            Sequence(
-                seqs,
-                sequence_type="tabs",
-                name="Histogram(s)",
-                anchor_id="{varid}histograms".format(varid=summary["varid"]),
-            ),
-            fq,
-            evs,
-        ],
+    template_variables["bottom"] = Container(
+        [statistics, hist, fq, evs],
         sequence_type="tabs",
-        anchor_id="{varid}bottom".format(varid=summary["varid"]),
+        anchor_id=f"{varid}bottom",
     )
 
     return template_variables

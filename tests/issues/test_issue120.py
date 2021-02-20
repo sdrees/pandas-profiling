@@ -16,9 +16,10 @@ def test_issue_120(get_data_file):
 
     report = ProfileReport(
         df,
-        correlations={"cramers": {"calculate": False}},
-        vars={"cat": {"check_composition": True}},
+        correlations=None,
+        progress_bar=False,
+        pool_size=1,
+        vars={"cat": {"words": True, "characters": True}},
     )
-    html = report.to_html()
-    assert type(html) == str
-    assert "<p class=h4>Dataset statistics</p>" in html
+    _ = report.report
+    assert report.description_set is not None

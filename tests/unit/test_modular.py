@@ -1,12 +1,12 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 import pytest
 
 import pandas_profiling
 
 
 @pytest.fixture
-def df(get_data_file):
+def tdf(get_data_file):
     file_name = get_data_file(
         "meteorites.csv",
         "https://data.nasa.gov/api/views/gh4g-9sfh/rows.csv?accessType=DOWNLOAD",
@@ -31,48 +31,58 @@ def df(get_data_file):
 
     # Example: Duplicate observations
     duplicates_to_add = pd.DataFrame(df.iloc[0:10])
-    duplicates_to_add["name"] = duplicates_to_add["name"] + " copy"
-
     df = df.append(duplicates_to_add, ignore_index=True)
     return df
 
 
-def test_modular_absent(df):
-    profile = df.profile_report(
+def test_modular_description_set(tdf):
+    profile = tdf.profile_report(
         title="Modular test",
+        duplicates=None,
         samples={"head": 0, "tail": 0},
-        correlations={
-            "pearson": {"calculate": False},
-            "spearman": {"calculate": False},
-            "kendall": {"calculate": False},
-            "phi_k": {"calculate": False},
-            "cramers": {"calculate": False},
-            "recoded": {"calculate": False},
-        },
+        correlations=None,
+        interactions=None,
         missing_diagrams={
             "matrix": False,
             "bar": False,
             "dendrogram": False,
             "heatmap": False,
         },
+        pool_size=1,
+    )
+
+    html = profile.get_description()
+    assert len(html) > 0
+
+
+def test_modular_absent(tdf):
+    profile = tdf.profile_report(
+        title="Modular test",
+        duplicates={"head": 0},
+        samples={"head": 0, "tail": 0},
+        interactions=None,
+        correlations=None,
+        missing_diagrams=None,
     )
 
     html = profile.to_html()
     assert "Correlations</h1>" not in html
+    assert "Duplicate rows</h1>" not in html
     assert "Sample</h1>" not in html
     assert "Missing values</h1>" not in html
 
 
-def test_modular_present(df):
-    profile = df.profile_report(
+def test_modular_present(tdf):
+    profile = tdf.profile_report(
         title="Modular test",
+        duplicates={"head": 10},
         samples={"head": 10, "tail": 10},
+        interactions={"targets": ["mass (g)"], "continuous": True},
         correlations={
             "pearson": {"calculate": True},
             "spearman": {"calculate": True},
             "kendall": {"calculate": True},
             "phi_k": {"calculate": True},
-            "recoded": {"calculate": True},
             "cramers": {"calculate": True},
         },
         missing_diagrams={
@@ -81,9 +91,11 @@ def test_modular_present(df):
             "dendrogram": True,
             "heatmap": True,
         },
+        pool_size=1,
     )
 
     html = profile.to_html()
     assert "Correlations</h1>" in html
+    assert "Duplicate rows</h1>" in html
     assert "Sample</h1>" in html
     assert "Missing values</h1>" in html

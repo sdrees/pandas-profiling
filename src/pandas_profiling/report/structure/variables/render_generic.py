@@ -1,20 +1,18 @@
 from pandas_profiling.report.presentation.core import (
-    Table,
-    Sequence,
     HTML,
+    Container,
+    Table,
     VariableInfo,
 )
-from pandas_profiling.report.structure.variables import render_common
 
 
 def render_generic(summary):
-    template_variables = {}  # render_common(summary)
-
     info = VariableInfo(
         anchor_id=summary["varid"],
         warnings=summary["warnings"],
         var_type="Unsupported",
         var_name=summary["varname"],
+        description=summary["description"],
     )
 
     table = Table(
@@ -41,6 +39,6 @@ def render_generic(summary):
     )
 
     return {
-        "top": Sequence([info, table, HTML("")], sequence_type="grid"),
+        "top": Container([info, table, HTML("")], sequence_type="grid"),
         "bottom": None,
     }

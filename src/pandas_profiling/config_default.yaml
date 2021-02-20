@@ -1,6 +1,24 @@
 # Title of the document
 title: "Pandas Profiling Report"
 
+# Metadata
+dataset:
+  description: ""
+  creator: ""
+  author: ""
+  copyright_holder: ""
+  copyright_year: ""
+  url: ""
+
+variables:
+  descriptions: {}
+
+# infer dtypes
+infer_dtypes: True
+
+# Show the description at each variable (in addition to the overview tab)
+show_variable_description: True
+
 # Number of workers (0=multiprocessing.cpu_count())
 pool_size: 0
 
@@ -21,13 +39,33 @@ vars:
 # Set to zero to disable
         chi_squared_threshold: 0.999
     cat:
-        check_composition: True
+        length: True
+        characters: True
+        words: True
         cardinality_threshold: 50
         n_obs: 5
 # Set to zero to disable
         chi_squared_threshold: 0.999
+        coerce_str_to_date: False
+        redact: False
     bool:
         n_obs: 3
+# string to boolean mappings pairs (true, false)
+        mappings:
+          - ["t", "f"]
+          - ["yes", "no"]
+          - ["y", "n"]
+          - ["true", "false"]
+    file:
+        active: False
+    image:
+        active: False
+        exif: True
+        hash: True
+    path:
+        active: False
+    url:
+        active: False
 
 # Sort the variables. Possible values: ascending, descending or None (leaves original sorting)
 sort: None
@@ -47,23 +85,24 @@ correlations:
     spearman:
       calculate: True
       warn_high_correlations: False
+      threshold: 0.9
     kendall:
       calculate: True
       warn_high_correlations: False
+      threshold: 0.9
     phi_k:
       calculate: True
       warn_high_correlations: False
+      threshold: 0.9
     cramers:
       calculate: True
       warn_high_correlations: True
       threshold: 0.9
-    recoded:
-      calculate: True
-      warn_high_correlations: True
-      threshold: 1.0
+
 
 # Bivariate / Pairwise relations
 interactions:
+  targets: []
   continuous: True
 
 # For categorical
@@ -75,8 +114,11 @@ plot:
     image_format: "svg"
     dpi: 800
 
+    scatter_threshold: 1000
+
     correlation:
-        cmap: 'bwr'
+        cmap: 'RdBu'
+        bad: '#000000'
 
     missing:
         cmap: 'RdBu'
@@ -84,23 +126,36 @@ plot:
 # https://github.com/ResidentMario/missingno/issues/93#issuecomment-513322615
         force_labels: True
 
-    histogram:
-# is used for numeric variables
-        bayesian_blocks_bins: True
+    pie:
+# display a pie chart if the number of distinct values is smaller or equal (set to 0 to disable)
+        max_unique: 10
 
-# If 'bayesian_blocks_bins' fails to provide a valid number of bins.
+    histogram:
+        x_axis_labels: True
+
+# Number of bins (set to 0 to automatically detect the bin size)
         bins: 50
-# Also used for equal size histogram
+
+# Maximum number of bins (when bins=0)
+        max_bins: 250
 
 # The number of observations to show
 n_obs_unique: 5
 n_extreme_obs: 5
 n_freq_table_max: 10
 
+# Use `deep` flag for memory_usage
+memory_deep: False
+
+# Configuration related to the duplicates
+duplicates:
+    head: 10
+
 # Configuration related to the samples area
 samples:
     head: 10
     tail: 10
+    random: 0
 
 # Configuration related to the rejection of variables
 reject_variables: True
@@ -120,8 +175,14 @@ html:
 # Offline support
     use_local_assets: True
 
+# If True, single file, else directory with assets
+    inline: True
+
 # Show navbar
     navbar_show: True
+
+# For internal use
+    file_name: None
 
 # Styling options for the HTML report
     style:

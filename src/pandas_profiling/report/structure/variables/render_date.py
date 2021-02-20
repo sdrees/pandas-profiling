@@ -1,35 +1,39 @@
 from pandas_profiling.config import config
-from pandas_profiling.visualisation.plot import mini_histogram, histogram
 from pandas_profiling.report.presentation.core import (
+    Container,
     Image,
-    Sequence,
     Table,
     VariableInfo,
 )
+from pandas_profiling.visualisation.plot import histogram, mini_histogram
 
 
 def render_date(summary):
-    # TODO: render common?
+    varid = summary["varid"]
     template_variables = {}
 
     image_format = config["plot"]["image_format"].get(str)
 
     # Top
     info = VariableInfo(
-        summary["varid"], summary["varname"], "Date", summary["warnings"]
+        summary["varid"],
+        summary["varname"],
+        "Date",
+        summary["warnings"],
+        summary["description"],
     )
 
     table1 = Table(
         [
             {
-                "name": "Distinct count",
-                "value": summary["n_unique"],
+                "name": "Distinct",
+                "value": summary["n_distinct"],
                 "fmt": "fmt",
                 "alert": False,
             },
             {
-                "name": "Unique (%)",
-                "value": summary["p_unique"],
+                "name": "Distinct (%)",
+                "value": summary["p_distinct"],
                 "fmt": "fmt_percent",
                 "alert": False,
             },
@@ -62,27 +66,25 @@ def render_date(summary):
     )
 
     mini_histo = Image(
-        mini_histogram(summary["histogram_data"], summary, summary["histogram_bins"]),
+        mini_histogram(*summary["histogram"], date=True),
         image_format=image_format,
         alt="Mini histogram",
     )
 
-    template_variables["top"] = Sequence(
+    template_variables["top"] = Container(
         [info, table1, table2, mini_histo], sequence_type="grid"
     )
 
     # Bottom
-    bottom = Sequence(
+    bottom = Container(
         [
             Image(
-                histogram(
-                    summary["histogram_data"], summary, summary["histogram_bins"]
-                ),
+                histogram(*summary["histogram"], date=True),
                 image_format=image_format,
                 alt="Histogram",
-                caption="Histogram",
+                caption=f"<strong>Histogram with fixed size bins</strong> (bins={len(summary['histogram'][1]) - 1})",
                 name="Histogram",
-                anchor_id="{varid}histogram".format(varid=summary["varid"]),
+                anchor_id=f"{varid}histogram",
             )
         ],
         sequence_type="tabs",

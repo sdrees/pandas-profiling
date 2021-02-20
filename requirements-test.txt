@@ -3,7 +3,9 @@ coverage<5
 codecov
 pytest-mypy
 pytest-cov
-pytest-black
 nbval
-fastparquet==0.3.3
+fastparquet==0.5.0
 flake8
+check-manifest>=0.41
+twine>=3.1.1
+kaggle

@@ -1,7 +1,7 @@
-from typing import List, Dict
+from typing import Dict, Sequence
 
 
-def freq_table(freqtable, n: int, max_number_to_print: int) -> List[Dict]:
+def freq_table(freqtable, n: int, max_number_to_print: int) -> Sequence[Dict]:
     """Render the rows for a frequency table (value, count).
 
     Args:
@@ -51,11 +51,10 @@ def freq_table(freqtable, n: int, max_number_to_print: int) -> List[Dict]:
         )
 
     if freq_other > min_freq:
+        other_count = str(freqtable.count() - max_number_to_print)
         rows.append(
             {
-                "label": "Other values ({})".format(
-                    str(freqtable.count() - max_number_to_print)
-                ),
+                "label": f"Other values ({other_count})",
                 "width": freq_other / max_freq,
                 "count": freq_other,
                 # Hack for tables with combined...

@@ -1,4 +1,4 @@
-from ipywidgets import widgets, GridspecLayout, VBox
+from ipywidgets import GridspecLayout, VBox, widgets
 
 from pandas_profiling.report.formatters import fmt_color, get_fmt_mapping
 from pandas_profiling.report.presentation.core.table import Table
@@ -18,9 +18,13 @@ def get_table(items):
         table[row_id, 0] = widgets.HTML(name)
         table[row_id, 1] = widgets.HTML(value)
 
-    return VBox([table])
+    return table
 
 
 class WidgetTable(Table):
     def render(self):
-        return get_table(self.content["rows"])
+        items = [get_table(self.content["rows"])]
+        if self.content["caption"] is not None:
+            items.append(widgets.HTML(f'<em>{self.content["caption"]}</em>'))
+
+        return VBox(items)

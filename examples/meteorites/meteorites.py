@@ -1,7 +1,7 @@
 from pathlib import Path
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 from pandas_profiling import ProfileReport
 from pandas_profiling.utils.cache import cache_file
@@ -28,12 +28,14 @@ if __name__ == "__main__":
     # Example: Mixed with base types
     df["mixed"] = np.random.choice([1, "A"], df.shape[0])
 
+    # Example: Unhashable
+    df["unhashable"] = [[1]] * df.shape[0]
+
     # Example: Highly correlated variables
     df["reclat_city"] = df["reclat"] + np.random.normal(scale=5, size=(len(df)))
 
     # Example: Duplicate observations
-    duplicates_to_add = pd.DataFrame(df.iloc[0:10])
-    duplicates_to_add[u"name"] = duplicates_to_add[u"name"] + " copy"
+    duplicates_to_add = pd.DataFrame(df.iloc[0:10].copy())
 
     df = df.append(duplicates_to_add, ignore_index=True)
 
@@ -44,5 +46,6 @@ if __name__ == "__main__":
         title="NASA Meteorites",
         html={"style": {"logo": logo_string}},
         correlations={"cramers": {"calculate": False}},
+        explorative=True,
     )
-    profile.to_file(output_file=Path("./meteorites_report.html"))
+    profile.to_file(Path("./meteorites_report.html"))
