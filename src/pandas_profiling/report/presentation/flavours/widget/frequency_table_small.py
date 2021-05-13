@@ -1,3 +1,5 @@
+from typing import List
+
 from ipywidgets import widgets
 
 from pandas_profiling.report.presentation.core.frequency_table_small import (
@@ -6,11 +8,11 @@ from pandas_profiling.report.presentation.core.frequency_table_small import (
 
 
 class WidgetFrequencyTableSmall(FrequencyTableSmall):
-    def render(self):
+    def render(self) -> widgets.VBox:
         return frequency_table_nb(self.content["rows"])
 
 
-def frequency_table_nb(rows):
+def frequency_table_nb(rows: List[dict]) -> widgets.VBox:
     items = []
 
     for row in rows:
@@ -60,13 +62,4 @@ def frequency_table_nb(rows):
                 )
             )
 
-    ft = widgets.VBox(items)
-
-    # Overwrite info to disabled
-    # TODO: resize width of progress bar / label
-    # display(
-    #     HTML(
-    #         "<style>.progress-bar-info{background-color: #ddd !important;} .dataframe td{     white-space: nowrap !important;}</style>"
-    #     )
-    # )
-    return ft
+    return widgets.VBox(items)

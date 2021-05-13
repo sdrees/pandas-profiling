@@ -1,7 +1,7 @@
 import kaggle
 import pandas as pd
 
-import pandas_profiling
+from pandas_profiling import ProfileReport
 from pandas_profiling.utils.paths import get_data_path
 
 # The dataset in this example is obtained using the `kaggle` api.
@@ -31,7 +31,8 @@ series = series.apply(lambda x: x.absolute()).apply(str)
 df = pd.DataFrame(series)
 
 # Generate the profile report
-profile = df.profile_report(
+profile = ProfileReport(
+    df,
     title="Example showcasing EXIF data (Kaggle 5 Celebrity Faces Dataset)",
     # Disable what's not in our focus
     duplicates=None,
@@ -42,12 +43,9 @@ profile = df.profile_report(
     explorative=True,
 )
 # We can also configure the report like this
-profile.set_variable(
-    "variables.descriptions",
-    {
-        "files": "The 5 Celebrity Faces Dataset found on Kaggle (dansbecker/5-celebrity-faces-dataset)."
-    },
-)
+profile.config.variables.descriptions = {
+    "files": "The 5 Celebrity Faces Dataset found on Kaggle (dansbecker/5-celebrity-faces-dataset)."
+}
 
 # Save the report
 profile.to_file("celebrity-faces.html")

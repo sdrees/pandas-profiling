@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pandas as pd
 
 from pandas_profiling import ProfileReport
@@ -32,11 +30,11 @@ def test_custom_sample():
     report = ProfileReport(
         df,
         title="Test custom sample",
-        sample=dict(
-            name="Mock data sample",
-            data=mock_data,
-            caption="Disclaimer: this is synthetic data generated based on the format of the data in this table.",
-        ),
+        sample={
+            "name": "Mock data sample",
+            "data": mock_data,
+            "caption": "Disclaimer: this is synthetic data generated based on the format of the data in this table.",
+        },
         minimal=True,
     )
 

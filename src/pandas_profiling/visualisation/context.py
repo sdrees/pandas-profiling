@@ -1,5 +1,6 @@
 import contextlib
 import warnings
+from typing import Any
 
 import matplotlib
 import matplotlib.cbook
@@ -11,13 +12,13 @@ from pandas.plotting import (
 
 
 @contextlib.contextmanager
-def manage_matplotlib_context():
+def manage_matplotlib_context() -> Any:
     """Return a context manager for temporarily changing matplotlib unit registries and rcParams."""
     originalRcParams = matplotlib.rcParams.copy()
 
-    ## Credits for this style go to the ggplot and seaborn packages.
-    ##   We copied the style file to remove dependencies on the Seaborn package.
-    ##   Check it out, it's an awesome library for plotting
+    # Credits for this style go to the ggplot and seaborn packages.
+    #   We copied the style file to remove dependencies on the Seaborn package.
+    #   Check it out, it's an awesome library for plotting
     customRcParams = {
         "patch.facecolor": "#348ABD",  # blue
         "patch.antialiased": True,
@@ -27,7 +28,6 @@ def manage_matplotlib_context():
         "figure.facecolor": "white",
         "text.color": ".15",
         "axes.labelcolor": ".15",
-        # legend.frameon: False
         "legend.numpoints": 1,
         "legend.scatterpoints": 1,
         "xtick.direction": "out",

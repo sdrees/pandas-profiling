@@ -1,5 +1,9 @@
 """Formatters are mappings from object(s) to a string."""
-from typing import Callable, Dict
+import decimal
+import math
+import re
+from datetime import timedelta
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 from jinja2.utils import escape
@@ -68,81 +72,82 @@ def fmt_percent(value: float, edge_cases: bool = True) -> str:
     return f"{value*100:2.1f}%"
 
 
-def fmt_timespan(num_seconds, detailed=False, max_units=3):
+def fmt_timespan(num_seconds: Any, detailed: bool = False, max_units: int = 3) -> str:
     # From the `humanfriendly` module (without additional dependency)
     # https://github.com/xolox/python-humanfriendly/
     # Author: Peter Odding <peter@peterodding.com>
     # URL: https://humanfriendly.readthedocs.io
 
-    import decimal
-    import math
-    import numbers
-    import re
-    from datetime import datetime, timedelta
+    time_units: List[Dict[str, Any]] = [
+        {
+            "divider": 1e-9,
+            "singular": "nanosecond",
+            "plural": "nanoseconds",
+            "abbreviations": ["ns"],
+        },
+        {
+            "divider": 1e-6,
+            "singular": "microsecond",
+            "plural": "microseconds",
+            "abbreviations": ["us"],
+        },
+        {
+            "divider": 1e-3,
+            "singular": "millisecond",
+            "plural": "milliseconds",
+            "abbreviations": ["ms"],
+        },
+        {
+            "divider": 1,
+            "singular": "second",
+            "plural": "seconds",
+            "abbreviations": ["s", "sec", "secs"],
+        },
+        {
+            "divider": 60,
+            "singular": "minute",
+            "plural": "minutes",
+            "abbreviations": ["m", "min", "mins"],
+        },
+        {
+            "divider": 60 * 60,
+            "singular": "hour",
+            "plural": "hours",
+            "abbreviations": ["h"],
+        },
+        {
+            "divider": 60 * 60 * 24,
+            "singular": "day",
+            "plural": "days",
+            "abbreviations": ["d"],
+        },
+        {
+            "divider": 60 * 60 * 24 * 7,
+            "singular": "week",
+            "plural": "weeks",
+            "abbreviations": ["w"],
+        },
+        {
+            "divider": 60 * 60 * 24 * 7 * 52,
+            "singular": "year",
+            "plural": "years",
+            "abbreviations": ["y"],
+        },
+    ]
 
-    time_units = (
-        dict(
-            divider=1e-9,
-            singular="nanosecond",
-            plural="nanoseconds",
-            abbreviations=["ns"],
-        ),
-        dict(
-            divider=1e-6,
-            singular="microsecond",
-            plural="microseconds",
-            abbreviations=["us"],
-        ),
-        dict(
-            divider=1e-3,
-            singular="millisecond",
-            plural="milliseconds",
-            abbreviations=["ms"],
-        ),
-        dict(
-            divider=1,
-            singular="second",
-            plural="seconds",
-            abbreviations=["s", "sec", "secs"],
-        ),
-        dict(
-            divider=60,
-            singular="minute",
-            plural="minutes",
-            abbreviations=["m", "min", "mins"],
-        ),
-        dict(divider=60 * 60, singular="hour", plural="hours", abbreviations=["h"]),
-        dict(divider=60 * 60 * 24, singular="day", plural="days", abbreviations=["d"]),
-        dict(
-            divider=60 * 60 * 24 * 7,
-            singular="week",
-            plural="weeks",
-            abbreviations=["w"],
-        ),
-        dict(
-            divider=60 * 60 * 24 * 7 * 52,
-            singular="year",
-            plural="years",
-            abbreviations=["y"],
-        ),
-    )
-
-    def round_number(count, keep_width=False):
-        text = "%.2f" % float(count)
+    def round_number(count: Any, keep_width: bool = False) -> str:
+        text = f"{float(count):.2f}"
         if not keep_width:
             text = re.sub("0+$", "", text)
             text = re.sub(r"\.$", "", text)
         return text
 
-    def coerce_seconds(value):
+    def coerce_seconds(value: Union[timedelta, int, float]) -> float:
         if isinstance(value, timedelta):
             return value.total_seconds()
-        if not isinstance(value, numbers.Number):
-            msg = "Failed to coerce value to number of seconds! (%r)"
-            raise ValueError(format(msg, value))
-        return value
+        return float(value)
 
-    def concatenate(items):
+    def concatenate(items: List[str]) -> str:
         items = list(items)
         if len(items) > 1:
             return ", ".join(items[:-1]) + " and " + items[-1]
@@ -151,12 +156,10 @@ def fmt_timespan(num_seconds, detailed=False, max_units=3):
         else:
             return ""
 
-    def pluralize(count, singular, plural=None):
+    def pluralize(count: Any, singular: str, plural: Optional[str] = None) -> str:
         if not plural:
             plural = singular + "s"
-        return "{} {}".format(
-            count, singular if math.floor(float(count)) == 1 else plural
-        )
+        return f"{count} {singular if math.floor(float(count)) == 1 else plural}"
 
     num_seconds = coerce_seconds(num_seconds)
     if num_seconds < 60 and not detailed:
@@ -193,7 +196,7 @@ def fmt_timespan(num_seconds, detailed=False, max_units=3):
             return concatenate(result)
 
 
-def fmt_numeric(value: float, precision=10) -> str:
+def fmt_numeric(value: float, precision: int = 10) -> str:
     """Format any numeric value.
 
     Args:
@@ -206,8 +209,10 @@ def fmt_numeric(value: float, precision=10) -> str:
     fmtted = f"{{:.{precision}g}}".format(value)
     for v in ["e+", "e-"]:
         if v in fmtted:
+            sign = "-" if v in "e-" else ""
             fmtted = fmtted.replace(v, " × 10<sup>") + "</sup>"
             fmtted = fmtted.replace("<sup>0", "<sup>")
+            fmtted = fmtted.replace("<sup>", f"<sup>{sign}")
 
     return fmtted
 
@@ -224,7 +229,7 @@ def fmt_number(value: int) -> str:
     return f"{value:n}"
 
 
-def fmt_array(value: np.ndarray, threshold=np.nan) -> str:
+def fmt_array(value: np.ndarray, threshold: Any = np.nan) -> str:
     """Format numpy arrays.
 
     Args:
@@ -240,7 +245,7 @@ def fmt_array(value: np.ndarray, threshold=np.nan) -> str:
     return return_value
 
 
-def fmt(value) -> str:
+def fmt(value: Any) -> str:
     """Format any value.
 
     Args:
@@ -255,7 +260,22 @@ def fmt(value) -> str:
         return str(escape(value))
 
 
-def help(title, url=None) -> str:
+def fmt_monotonic(value: int) -> str:
+    if value == 2:
+        return "Strictly increasing"
+    elif value == 1:
+        return "Increasing"
+    elif value == 0:
+        return "Not monotonic"
+    elif value == -1:
+        return "Decreasing"
+    elif value == -2:
+        return "Strictly decreasing"
+    else:
+        raise ValueError("Value should be integer ranging from -2 to 2.")
+
+
+def help(title: str, url: Optional[str] = None) -> str:
     """Creat help badge
 
     Args:
@@ -271,18 +291,5 @@ def help(title, url=None) -> str:
         return f'<span class="badge pull-right" style="color:#fff;background-color:#337ab7;" title="{title}">?</span>'
 
 
-def get_fmt_mapping() -> Dict[str, Callable]:
-    """Get a mapping from formatter name to the function
-
-    Returns: formatter mapping
-    """
-    return {
-        "fmt_percent": fmt_percent,
-        "fmt_bytesize": fmt_bytesize,
-        "fmt_timespan": fmt_timespan,
-        "fmt_numeric": fmt_numeric,
-        "fmt_number": fmt_number,
-        "fmt_array": fmt_array,
-        "fmt": fmt,
-        "raw": lambda x: x,
-    }
+def fmt_badge(value: str) -> str:
+    return re.sub(r"\((\d+)\)", r'<span class="badge">\1</span>', value)

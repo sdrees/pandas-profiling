@@ -9,6 +9,10 @@ Contributing a new feature
 
 * Ensure the PR description clearly describes the problem and solution.
   Include the relevant issue number if applicable.
+  
+Slack community
+---------------
+A low threshold place to ask questions or start contributing is by reaching out on the pandas-profiling Slack. `Join the Slack community <https://join.slack.com/t/pandas-profiling/shared_invite/zt-oe5ol4yc-YtbOxNBGUCb~v73TamRLuA>`_.
 
 Developer tools
 ---------------
@@ -17,15 +21,14 @@ There are tools available to ease the development cycle. These can be called fro
 
 The following commands are supported:
 
-.. code-block::
+.. code-block:: console
 
-        make lint
-        make install
-        make examples
-        make docs
-        make test
-        make clean
-        make typing
+    make lint
+    make install
+    make examples
+    make docs
+    make test
+    make clean
 
 
 Git workflow
