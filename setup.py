@@ -11,7 +11,7 @@ with (source_root / "README.md").open(encoding="utf-8") as f:
 with (source_root / "requirements.txt").open(encoding="utf8") as f:
     requirements = f.readlines()
 
-version = "3.1.1"
+version = "3.2.0"
 
 with (source_root / "src" / "pandas_profiling" / "version.py").open(
     "w", encoding="utf-8"
@@ -38,7 +38,7 @@ setup(
     install_requires=requirements,
     extras_require={
         "notebook": [
-            "jupyter-client>=6.0.0",
+            "jupyter-client>=5.3.4",
             "jupyter-core>=4.6.3",
             "ipywidgets>=7.5.1",
         ],
