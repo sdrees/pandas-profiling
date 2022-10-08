@@ -13,14 +13,14 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Setup Python 3.8
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: "3.8"
       
-    - uses: actions/cache@v1
+    - uses: actions/cache@v3
       name: Cache pip dependencies
       with:
         path: ~/.cache/pip
@@ -47,7 +47,7 @@ jobs:
         twine check dist/*
 
     - name: Upload Pipeline Artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: built-artifacts
         path: dist/
@@ -82,7 +82,7 @@ jobs:
         name: built-artifacts
         path: dist/
 
-    - uses: pypa/gh-action-pypi-publish@v1.4.2
+    - uses: pypa/gh-action-pypi-publish@v1.5.1
       with:
         user: __token__
         password: ${{ secrets.PYPI_API_TOKEN }}
@@ -92,7 +92,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Configurating Git
       run: |
@@ -101,7 +101,7 @@ jobs:
         git config --local core.autocrlf false
 
     - name: Set up Python 3.8
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v4
       with:
         python-version: 3.8
 
@@ -156,4 +156,4 @@ jobs:
       with:
         branch: gh-pages
         directory: .
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+        github_token: ${{ secrets.ACCESS_TOKEN }}

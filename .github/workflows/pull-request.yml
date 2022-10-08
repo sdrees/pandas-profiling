@@ -6,18 +6,17 @@ on:
     branches:
     - master
 
-
 jobs:
   commitlint:
     name: Lint commmit message
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-          
-    - uses: wagoid/commitlint-github-action@v3
+
+    - uses: wagoid/commitlint-github-action@v5
 
   lint:
     name: Lint source code
@@ -35,11 +34,11 @@ jobs:
         git config --local core.autocrlf false
 
     - name: Set up Python 3.8
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v4
       with:
         python-version: 3.8
 
-    - uses: actions/cache@v1
+    - uses: actions/cache@v3
       name: Cache pip dependencies
       with:
         path: ~/.cache/pip
@@ -57,16 +56,23 @@ jobs:
     - name: Install the package
       run: make install
 
-    - name: Code formatting
+    - name: Validate code formatting
       run: make lint
 
     - name: Commit code formatting changes
+      id: commit
       run: |
-        git add -u
-        git commit -m "[skip ci] Code formatting" -a || true
+        if [[ `git status --porcelain --untracked-files=no` ]]; then
+          echo ::set-output name=CHANGES::true
+          git add -u
+          git commit -m "[skip ci] Code formatting" -a
+        else
+          echo ::set-output name=CHANGES::false
+        fi
 
     - name: Push changes
       uses: ad-m/github-push-action@v0.6.0
+      if: ${{ steps.commit.outputs.CHANGES == 'true' }}
       with:
         branch: ${{ github.head_ref }}
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+        github_token: ${{ secrets.ACCESS_TOKEN }}
