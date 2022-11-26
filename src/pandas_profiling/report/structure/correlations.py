@@ -55,12 +55,18 @@ def get_correlation_items(config: Settings, summary: dict) -> Optional[Renderabl
     The empirical estimators used for Cramér's V have been proved to be biased, even for large samples.
     We use a bias-corrected measure that has been proposed by Bergsma in 2013 that can be found <a href='http://stats.lse.ac.uk/bergsma/pdf/cramerV3.pdf'>here</a>."""
 
-    auto_description = """The auto setting is an easily interpretable pairwise column metric of the following mapping:
-                        vartype-vartype         : method, 
-                        categorical-categorical : Cramer's V, 
-                        numerical-categorical   : Cramer's V (using a discretized numerical column), 
-                        numerical-numerical     : Spearman's ρ. 
-                        This configuration uses the best suitable for each pair of columns."""
+    auto_description = """
+                            The auto setting is an interpretable pairwise 
+                                column metric of the following mapping:
+                        <ul>
+                            <li>  Variable_type-Variable_type : Method, <strong> Range </strong> <br /> </li> 
+                            <li> Categorical-Categorical     : Cramer's V, <strong> [0,1] </strong> <br /> </li> 
+                            <li> Numerical-Categorical       : Cramer's V, <strong> [0,1] </strong> (using a discretized numerical column) <br /> </li> 
+                            <li> Numerical-Numerical         : Spearman's ρ, <strong> [-1,1] </strong> <br /> </li> 
+                        </ul>
+                        The number of bins used in the discretization for the Numerical-Categorical column pair can be changed
+                        using config.correlations["auto"].n_bins. The number of bins affects the granularity of the association you wish to measure. <br><br>
+                        This configuration uses the recommended metric for each pair of columns."""
 
     key_to_data = {
         "pearson": (-1, "Pearson's r", pearson_description),
@@ -68,7 +74,7 @@ def get_correlation_items(config: Settings, summary: dict) -> Optional[Renderabl
         "kendall": (-1, "Kendall's τ", kendall_description),
         "phi_k": (0, "Phik (φk)", phi_k_description),
         "cramers": (0, "Cramér's V (φc)", cramers_description),
-        "auto": (0, "Auto", auto_description),
+        "auto": (-1, "Auto", auto_description),
     }
 
     image_format = config.plot.image_format
@@ -76,29 +82,63 @@ def get_correlation_items(config: Settings, summary: dict) -> Optional[Renderabl
     for key, item in summary["correlations"].items():
         vmin, name, description = key_to_data[key]
 
-        diagram = Image(
-            plot.correlation_matrix(config, item, vmin=vmin),
-            image_format=image_format,
-            alt=name,
-            anchor_id=f"{key}_diagram",
-            name=name,
-            classes="correlation-diagram",
-        )
+        if isinstance(item, list):
+            cont: List[Renderable] = []
+            diagrams: List[Renderable] = []
+            for idx, i in enumerate(item):
+                diagram: Renderable = Image(
+                    plot.correlation_matrix(config, i, vmin=vmin),
+                    image_format=image_format,
+                    alt=name,
+                    anchor_id=f"{key}_diagram",
+                    name=config.html.style._labels[idx],
+                    classes="correlation-diagram",
+                )
+                diagrams.append(diagram)
 
-        if len(description) > 0:
             desc = HTML(
-                f'<div style="padding:20px" class="text-muted"><h3>{name}</h3>{description}</div>',
+                f'<div style="padding:20px" class="text-muted">{description}</div>',
                 anchor_id=f"{key}_html",
                 classes="correlation-description",
+                name=name,
             )
 
             tbl = Container(
-                [diagram, desc], anchor_id=key, name=name, sequence_type="grid"
+                diagrams + [desc],
+                anchor_id=key,
+                name=name,
+                sequence_type="batch_grid",
+                batch_size=len(config.html.style._labels) + 1,
+            )
+            cont.append(tbl)
+
+            items.append(
+                Container(cont, anchor_id=key, name=name, sequence_type="grid")
+            )
+        else:
+            diagram = Image(
+                plot.correlation_matrix(config, item, vmin=vmin),
+                image_format=image_format,
+                alt=name,
+                anchor_id=f"{key}_diagram",
+                name=name,
+                classes="correlation-diagram",
             )
 
-            items.append(tbl)
-        else:
-            items.append(diagram)
+            if len(description) > 0:
+                desc = HTML(
+                    f'<div style="padding:20px" class="text-muted"><h3>{name}</h3>{description}</div>',
+                    anchor_id=f"{key}_html",
+                    classes="correlation-description",
+                )
+
+                tbl = Container(
+                    [diagram, desc], anchor_id=key, name=name, sequence_type="grid"
+                )
+
+                items.append(tbl)
+            else:
+                items.append(diagram)
 
     corr = Container(
         items,
@@ -109,9 +149,9 @@ def get_correlation_items(config: Settings, summary: dict) -> Optional[Renderabl
 
     if len(items) > 0:
         btn = ToggleButton(
-            "Toggle correlation descriptions",
+            "Show correlation descriptions",
             anchor_id="toggle-correlation-description",
-            name="Toggle correlation descriptions",
+            name="Show correlation descriptions",
         )
 
         return Collapse(

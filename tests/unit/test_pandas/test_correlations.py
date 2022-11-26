@@ -1,12 +1,12 @@
-import pytest
-from pandas_profiling.config import Settings
-import pandas as pd
 import numpy as np
+import pandas as pd
+import pytest
 
+from pandas_profiling.config import Settings
 from pandas_profiling.model.pandas.correlations_pandas import (
     pandas_auto_compute,
-    pandas_spearman_compute,
     pandas_cramers_compute,
+    pandas_spearman_compute,
 )
 
 
@@ -45,7 +45,7 @@ def test_summary():
         "float_1": {"type": "Numeric", "n_distinct": 10},
         "float_2": {"type": "Numeric", "n_distinct": 10},
         "integer_1": {"type": "Numeric", "n_distinct": 10},
-        "integer_1": {"type": "Numeric", "n_distinct": 10},
+        "integer_2": {"type": "Numeric", "n_distinct": 10},
         "string_1": {"type": "Categorical", "n_distinct": 10},
         "string_2": {"type": "Categorical", "n_distinct": 10},
     }
